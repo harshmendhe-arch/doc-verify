@@ -8,7 +8,8 @@ from app.routers import (
     marriage_certificate, property_registration, land_record,
     vehicle_registration, police_clearance, migration_certificate,
     transfer_certificate, degree_certificate, marksheet,
-    bonafide_certificate, character_certificate
+    bonafide_certificate, character_certificate,
+    ocr_verification
 )
 
 app = FastAPI(
@@ -37,7 +38,8 @@ routers = [
     vehicle_registration.router, police_clearance.router,
     migration_certificate.router, transfer_certificate.router,
     degree_certificate.router, marksheet.router,
-    bonafide_certificate.router, character_certificate.router
+    bonafide_certificate.router, character_certificate.router,
+    ocr_verification.router
 ]
 
 for router in routers:

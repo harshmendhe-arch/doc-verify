@@ -101,7 +101,7 @@ export default function VerifyPage() {
           success: uiStatus === 'verified',
           document_type: data.document_type || selectedDoc.name,
           status: uiStatus,
-          confidence: data.confidence ?? data.confidence_score ?? 95,
+          confidence: data.ocr_confidence ?? data.confidence ?? data.confidence_score ?? 95,
           details: data.details || data.data || flattenObject(data),
           timestamp: data.timestamp || new Date().toISOString(),
           reference_id:

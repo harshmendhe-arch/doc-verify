@@ -176,26 +176,46 @@ export async function checkHealth(): Promise<ApiResponse> {
 }
 
 /**
- * Verify a document.
+ * Verify a document with optional OCR cross-check.
+ *
+ * If a file is provided, sends it to the OCR verification endpoint
+ * as multipart/form-data (file + all form fields).
+ * Otherwise, falls back to the standard JSON-only endpoint.
  *
  * @param endpoint  e.g. '/v1/verify/aadhaar'
  * @param formData  key/value pairs collected from the UI form
- * @param file      optional document image/PDF (currently unused by the
- *                  mock backend, which accepts JSON only; kept for when
- *                  the real endpoint supports multipart uploads)
+ * @param file      optional document image/PDF for OCR cross-check
  */
 export async function verifyDocument(
   endpoint: string,
   formData: Record<string, string>,
   file?: File
 ): Promise<ApiResponse> {
-  // The backend uses strict Pydantic JSON models — always send JSON.
-  // The `file` parameter is accepted here so the call-site signature
-  // stays stable when multipart support is added later.
-  void file; // explicitly mark as intentionally unused for now
+  if (file) {
+    // ── OCR verification: send file + fields as multipart/form-data ──
+    const form = new FormData();
+    form.append('file', file);
+    form.append('consent', 'true');
 
-  // Build a clean payload: always include consent, skip the file-field
-  // placeholder value (`document_image`) and any blank strings.
+    // Extract doc_type from endpoint path (e.g. /v1/verify/aadhaar → aadhaar)
+    const docType = endpoint.replace('/v1/verify/', '');
+    form.append('doc_type', docType);
+
+    // Append all form fields (skip file-related keys)
+    for (const [key, value] of Object.entries(formData)) {
+      if (value !== '' && key !== 'document_image') {
+        form.append(key, value);
+      }
+    }
+
+    // Use the OCR endpoint
+    return request('/v1/verify/with-ocr', {
+      method: 'POST',
+      body: form,
+    });
+  }
+
+  // ── Standard JSON-only verification ──
   const payload: Record<string, unknown> = { consent: true };
 
   for (const [key, value] of Object.entries(formData)) {
